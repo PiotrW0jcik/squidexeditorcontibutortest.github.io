@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h2 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        select {
+            width: 30%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #000; /* Add a black border */
+            border-radius: 4px;
+            appearance: none; /* Remove default dropdown arrow in some browsers */
+            background-color: #fff; /* Set the background color to white */
+            color: #333; /* Set the text color */
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '\25BC'; /* Unicode character for a down arrow */
+            font-size: 14px;
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            color: #333; /* Set the arrow color */
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cloud.squidex.io/scripts/editor-sdk.js"></script>
+</head>
+
+<body>
+    <div>
+        <div class="select-wrapper">
+            <select id="ContributorsDropdown">
+                <option value="" disabled selected>Choose from the list</option>
+            </select>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            let field = new SquidexFormField();
+            let params = getQueryParameters();
+            let url = params.url || 'https://squidex2108.azurewebsites.net/api/apps/sfc/contributors';
+            let defaultValue = "";
+
+            function getQueryParameters(str) {
+                return (str || document.location.search).replace(/(^\?)/, '').split("&").map(function (n) {
+                    return n = n.split("="), this[n[0]] = n[1], this;
+                }.bind({}))[0];
+            }
+
+            var contributorsDropdown = $("#ContributorsDropdown");
+
+            function initSource() {
+                // Fetch JSON data from the provided URL
+                $.getJSON(url, function (data) {
+                    $.each(data.items, function (i, item) {
+                        let contributorName = item.contributorName;
+
+                        // Create an option element for each contributor name
+                        let option = $("<option/>")
+                            .attr("value", contributorName)
+                            .text(contributorName);
+
+                        // Append the option to the dropdown
+                        contributorsDropdown.append(option);
+                    });
+
+                    // Set the default selected value
+                    contributorsDropdown.val(defaultValue);
+
+                    // Add change event listener to handle dropdown changes
+                    contributorsDropdown.on("change", function () {
+                        defaultValue = $(this).val();
+                        updateSelectedContributor();
+                    });
+                });
+            }
+
+            function updateSelectedContributor() {
+                // Update the field value with the selected contributor
+                field.valueChanged(defaultValue);
+            }
+
+            field.onDisabled(function (disabled) {
+                contributorsDropdown.prop("disabled", disabled);
+            });
+
+            field.onValueChanged(function (value) {
+                // Update the default value and select the corresponding option in the dropdown
+                defaultValue = value || "";
+                contributorsDropdown.val(defaultValue);
+            });
+
+            // Initialize the source data and dropdown
+            initSource();
+        });
+    </script>
+</body>
+
+</html>
